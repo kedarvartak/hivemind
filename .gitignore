@@ -1,0 +1,7 @@
+node_modules/
+dist/
+# Don't commit stored memory by default — user's data is private
+memory/
+.memoree/
+*.tsbuildinfo
+.env

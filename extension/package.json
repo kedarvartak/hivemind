@@ -1,0 +1,120 @@
+{
+  "name": "memoree",
+  "displayName": "Memoree",
+  "description": "Persistent, topic-scoped memory blocks for AI agents",
+  "version": "0.1.0",
+  "publisher": "memoree",
+  "engines": {
+    "vscode": "^1.85.0"
+  },
+  "categories": ["AI", "Other"],
+  "icon": "media/icon.png",
+  "activationEvents": [],
+  "main": "./dist/extension.js",
+  "contributes": {
+    "configuration": {
+      "title": "Memoree",
+      "properties": {
+        "memoree.memoryDir": {
+          "type": "string",
+          "default": "",
+          "description": "Absolute path to the memory blocks directory. Leave empty to use <workspace>/.memoree"
+        }
+      }
+    },
+    "viewsContainers": {
+      "activitybar": [
+        {
+          "id": "memoree-container",
+          "title": "Memoree",
+          "icon": "media/icon.svg"
+        }
+      ]
+    },
+    "views": {
+      "memoree-container": [
+        {
+          "id": "memoree.blocksView",
+          "name": "Memory Blocks"
+        }
+      ]
+    },
+    "commands": [
+      {
+        "command": "memoree.refresh",
+        "title": "Refresh",
+        "icon": "$(refresh)",
+        "category": "Memoree"
+      },
+      {
+        "command": "memoree.newBlock",
+        "title": "New Block",
+        "icon": "$(add)",
+        "category": "Memoree"
+      },
+      {
+        "command": "memoree.editBlock",
+        "title": "Edit Block",
+        "icon": "$(edit)",
+        "category": "Memoree"
+      },
+      {
+        "command": "memoree.deleteBlock",
+        "title": "Delete Block",
+        "icon": "$(trash)",
+        "category": "Memoree"
+      },
+      {
+        "command": "memoree.copyId",
+        "title": "Copy Block ID",
+        "category": "Memoree"
+      }
+    ],
+    "menus": {
+      "view/title": [
+        {
+          "command": "memoree.newBlock",
+          "when": "view == memoree.blocksView",
+          "group": "navigation@1"
+        },
+        {
+          "command": "memoree.refresh",
+          "when": "view == memoree.blocksView",
+          "group": "navigation@2"
+        }
+      ],
+      "view/item/context": [
+        {
+          "command": "memoree.editBlock",
+          "when": "view == memoree.blocksView && viewItem == block",
+          "group": "inline@1"
+        },
+        {
+          "command": "memoree.deleteBlock",
+          "when": "view == memoree.blocksView && viewItem == block",
+          "group": "inline@2"
+        },
+        {
+          "command": "memoree.copyId",
+          "when": "view == memoree.blocksView && viewItem == block",
+          "group": "context"
+        }
+      ]
+    }
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "watch": "tsc --watch -p tsconfig.json",
+    "vscode:prepublish": "npm run build"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "@types/uuid": "^10.0.0",
+    "@types/vscode": "^1.85.0",
+    "typescript": "^5.8.2"
+  },
+  "dependencies": {
+    "fuse.js": "^7.0.0",
+    "uuid": "^11.0.5"
+  }
+}
