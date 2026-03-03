@@ -1,110 +1,52 @@
 {
-  "name": "memoree",
-  "displayName": "Memoree",
-  "description": "Persistent, topic-scoped memory blocks for AI agents",
-  "version": "0.1.0",
-  "publisher": "memoree",
+  "name": "hivemind",
+  "displayName": "HiveMind",
+  "description": "Persistent AI memory blocks and team coding style rules",
+  "version": "0.2.0",
+  "publisher": "hivemind",
   "engines": {
     "vscode": "^1.85.0"
   },
   "categories": ["AI", "Other"],
   "icon": "media/icon.png",
-  "activationEvents": [],
+  "activationEvents": [
+    "onView:hivemind.sidebar",
+    "onCommand:memoree.refresh"
+  ],
   "main": "./dist/extension.js",
   "contributes": {
     "configuration": {
-      "title": "Memoree",
+      "title": "HiveMind",
       "properties": {
-        "memoree.memoryDir": {
+        "hivemind.storeDir": {
           "type": "string",
           "default": "",
-          "description": "Absolute path to the memory blocks directory. Leave empty to use <workspace>/.memoree"
+          "description": "Absolute path to where HiveMind stores groups and style rules. Leave empty to use <workspace>/.hivemind"
         }
       }
     },
     "viewsContainers": {
       "activitybar": [
         {
-          "id": "memoree-container",
-          "title": "Memoree",
+          "id": "hivemind-container",
+          "title": "HiveMind",
           "icon": "media/icon.svg"
         }
       ]
     },
     "views": {
-      "memoree-container": [
+      "hivemind-container": [
         {
-          "id": "memoree.blocksView",
-          "name": "Memory Blocks"
-        }
-      ]
-    },
-    "commands": [
-      {
-        "command": "memoree.refresh",
-        "title": "Refresh",
-        "icon": "$(refresh)",
-        "category": "Memoree"
-      },
-      {
-        "command": "memoree.newBlock",
-        "title": "New Block",
-        "icon": "$(add)",
-        "category": "Memoree"
-      },
-      {
-        "command": "memoree.editBlock",
-        "title": "Edit Block",
-        "icon": "$(edit)",
-        "category": "Memoree"
-      },
-      {
-        "command": "memoree.deleteBlock",
-        "title": "Delete Block",
-        "icon": "$(trash)",
-        "category": "Memoree"
-      },
-      {
-        "command": "memoree.copyId",
-        "title": "Copy Block ID",
-        "category": "Memoree"
-      }
-    ],
-    "menus": {
-      "view/title": [
-        {
-          "command": "memoree.newBlock",
-          "when": "view == memoree.blocksView",
-          "group": "navigation@1"
-        },
-        {
-          "command": "memoree.refresh",
-          "when": "view == memoree.blocksView",
-          "group": "navigation@2"
-        }
-      ],
-      "view/item/context": [
-        {
-          "command": "memoree.editBlock",
-          "when": "view == memoree.blocksView && viewItem == block",
-          "group": "inline@1"
-        },
-        {
-          "command": "memoree.deleteBlock",
-          "when": "view == memoree.blocksView && viewItem == block",
-          "group": "inline@2"
-        },
-        {
-          "command": "memoree.copyId",
-          "when": "view == memoree.blocksView && viewItem == block",
-          "group": "context"
+          "type": "webview",
+          "id": "hivemind.sidebar",
+          "name": "HiveMind"
         }
       ]
     }
   },
   "scripts": {
-    "build": "tsc -p tsconfig.json",
-    "watch": "tsc --watch -p tsconfig.json",
+    "build": "/home/kedar/.nvm/versions/node/v22.22.0/bin/node node_modules/typescript/bin/tsc -p tsconfig.json",
+    "watch": "/home/kedar/.nvm/versions/node/v22.22.0/bin/node node_modules/typescript/bin/tsc --watch -p tsconfig.json",
     "vscode:prepublish": "npm run build"
   },
   "devDependencies": {
@@ -114,7 +56,6 @@
     "typescript": "^5.8.2"
   },
   "dependencies": {
-    "fuse.js": "^7.0.0",
     "uuid": "^11.0.5"
   }
 }

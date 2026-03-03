@@ -1,0 +1,8 @@
+
+> hivemind@0.2.0 watch
+> /home/kedar/.nvm/versions/node/v22.22.0/bin/node node_modules/typescript/bin/tsc --watch -p tsconfig.json
+
+[2J[3J[H6:22:45 PM - Starting compilation in watch mode...
+
+
+6:22:46 PM - Found 0 errors. Watching for file changes.

@@ -2,13 +2,19 @@
   "version": "2.0.0",
   "tasks": [
     {
-      "type": "typescript",
-      "tsconfig": "tsconfig.json",
-      "option": "watch",
-      "problemMatcher": "$tsc-watch",
-      "group": "build",
       "label": "watch",
+      "type": "shell",
+      "command": "/home/kedar/.nvm/versions/node/v22.22.0/bin/node",
+      "args": [
+        "${workspaceFolder}/node_modules/typescript/bin/tsc",
+        "-p",
+        "${workspaceFolder}/tsconfig.json",
+        "--watch",
+        "--preserveWatchOutput"
+      ],
+      "group": "build",
       "isBackground": true,
+      "problemMatcher": "$tsc-watch",
       "presentation": {
         "echo": true,
         "reveal": "silent",

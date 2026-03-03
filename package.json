@@ -1,7 +1,7 @@
 {
   "name": "memoree-mcp",
   "version": "0.2.0",
-  "description": "Persistent AI memory + team style-rule enforcement via MCP",
+  "description": "HiveMind — persistent AI memory and team style rule enforcement via MCP",
   "type": "module",
   "main": "dist/index.js",
   "scripts": {
@@ -11,8 +11,8 @@
     "clean": "rm -rf dist"
   },
   "dependencies": {
+    "@libsql/client": "^0.14.0",
     "@modelcontextprotocol/sdk": "^1.6.1",
-    "@supabase/supabase-js": "^2.49.1",
     "dotenv": "^16.4.7",
     "fuse.js": "^7.0.0",
     "uuid": "^11.0.5",
