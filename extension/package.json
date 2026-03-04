@@ -18,10 +18,15 @@
     "configuration": {
       "title": "HiveMind",
       "properties": {
-        "hivemind.storeDir": {
+        "hivemind.tursoUrl": {
           "type": "string",
           "default": "",
-          "description": "Absolute path to where HiveMind stores groups and style rules. Leave empty to use <workspace>/.hivemind"
+          "description": "Turso database URL (e.g. libsql://your-db.turso.io). Required for cloud sync."
+        },
+        "hivemind.tursoToken": {
+          "type": "string",
+          "default": "",
+          "description": "Turso auth token. Required for cloud sync."
         }
       }
     },

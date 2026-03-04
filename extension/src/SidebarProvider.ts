@@ -1,29 +1,18 @@
 import * as vscode from "vscode";
-import { v4 as uuidv4 } from "uuid";
 import { JsonStore } from "./store";
-import type { MemoryBlock } from "./types";
-
-interface Group {
-  id: string;
-  name: string;
-}
-
-interface Rule {
-  id: string;
-  groupId: string;
-  title: string;
-  content: string;
-}
+import { TursoExtensionStore } from "./TursoExtensionStore";
 
 export class SidebarProvider implements vscode.WebviewViewProvider {
   public static readonly viewType = "hivemind.sidebar";
 
   private _view?: vscode.WebviewView;
+  private _cloud: TursoExtensionStore | null = null;
 
   constructor(
     private readonly _extensionUri: vscode.Uri,
     private readonly _memoryStore: JsonStore,
-    private readonly _globalState: vscode.Memento,
+    private readonly _tursoUrl: string,
+    private readonly _tursoToken: string,
   ) {}
 
   public resolveWebviewView(
@@ -40,19 +29,32 @@ export class SidebarProvider implements vscode.WebviewViewProvider {
 
     webviewView.webview.html = this._getHtmlForWebview();
 
+    // Initialise Turso cloud connection
+    if (this._tursoUrl && this._tursoToken) {
+      this._cloud = new TursoExtensionStore(this._tursoUrl, this._tursoToken);
+      this._cloud
+        .init()
+        .then(() => this._sendState())
+        .catch((err: unknown) => {
+          vscode.window.showErrorMessage(
+            `HiveMind: failed to connect to Turso — ${err}`,
+          );
+        });
+    }
+
     webviewView.webview.onDidReceiveMessage(async (message) => {
       try {
         await this._handleMessage(message);
       } catch (err) {
-        vscode.window.showErrorMessage(`HiveMind Error: ${err}`);
+        vscode.window.showErrorMessage(`HiveMind: ${err}`);
       }
     });
 
-    // Notify webview of file changes in memory blocks
+    // Refresh when local JSON files change
     const fsWatcher = vscode.workspace.createFileSystemWatcher("**/*.json");
-    fsWatcher.onDidChange(() => this._sendState());
-    fsWatcher.onDidCreate(() => this._sendState());
-    fsWatcher.onDidDelete(() => this._sendState());
+    fsWatcher.onDidChange(() => void this._sendState());
+    fsWatcher.onDidCreate(() => void this._sendState());
+    fsWatcher.onDidDelete(() => void this._sendState());
   }
 
   public refresh() {
@@ -62,90 +64,63 @@ export class SidebarProvider implements vscode.WebviewViewProvider {
   private async _handleMessage(message: any) {
     switch (message.type) {
       case "ready":
-        this._sendState();
+        await this._sendState();
         break;
 
-      // ---- Memory Blocks ----
+      // ---- Memory Blocks (local) ----
       case "addBlock":
         this._memoryStore.createBlock(message.topic, message.content, message.tags);
-        this._sendState();
+        await this._sendState();
         break;
       case "updateBlock":
         this._memoryStore.updateBlock(message.id, message.topic, message.content, message.tags);
-        this._sendState();
+        await this._sendState();
         break;
       case "deleteBlock":
         this._memoryStore.deleteBlock(message.id);
-        this._sendState();
+        await this._sendState();
         break;
 
-      // ---- Rules / Groups ----
-      case "addGroup": {
-        const groups = this._getGroups();
-        groups.push({ id: uuidv4(), name: message.name });
-        await this._saveGroups(groups);
-        this._sendState();
+      // ---- Groups / Rules (Turso cloud) ----
+      case "addGroup":
+        if (!this._cloud) { this._warnNoCloud(); return; }
+        await this._cloud.createGroup(message.name);
+        await this._sendState();
         break;
-      }
-      case "deleteGroup": {
-        const groups = this._getGroups().filter((g) => g.id !== message.id);
-        await this._saveGroups(groups);
-        const rules = this._getRules().filter((r) => r.groupId !== message.id);
-        await this._saveRules(rules);
-        this._sendState();
+      case "deleteGroup":
+        if (!this._cloud) { this._warnNoCloud(); return; }
+        await this._cloud.deleteGroup(message.id);
+        await this._sendState();
         break;
-      }
-      case "addRule": {
-        const rules = this._getRules();
-        rules.push({
-          id: uuidv4(),
-          groupId: message.groupId,
-          title: message.title,
-          content: message.content,
-        });
-        await this._saveRules(rules);
-        this._sendState();
+      case "addRule":
+        if (!this._cloud) { this._warnNoCloud(); return; }
+        await this._cloud.createRule(message.groupId, message.title, message.content);
+        await this._sendState();
         break;
-      }
-      case "updateRule": {
-        const rules = this._getRules();
-        const rule = rules.find((r) => r.id === message.id);
-        if (rule) {
-          rule.title = message.title;
-          rule.content = message.content;
-          await this._saveRules(rules);
-        }
-        this._sendState();
+      case "updateRule":
+        if (!this._cloud) { this._warnNoCloud(); return; }
+        await this._cloud.updateRule(message.id, message.title, message.content);
+        await this._sendState();
         break;
-      }
-      case "deleteRule": {
-        const rules = this._getRules().filter((r) => r.id !== message.id);
-        await this._saveRules(rules);
-        this._sendState();
+      case "deleteRule":
+        if (!this._cloud) { this._warnNoCloud(); return; }
+        await this._cloud.deleteRule(message.id);
+        await this._sendState();
         break;
-      }
     }
   }
 
-  private _getGroups(): Group[] {
-    return this._globalState.get<Group[]>("hivemind.groups") || [];
-  }
-  private async _saveGroups(groups: Group[]) {
-    await this._globalState.update("hivemind.groups", groups);
-  }
-
-  private _getRules(): Rule[] {
-    return this._globalState.get<Rule[]>("hivemind.rules") || [];
-  }
-  private async _saveRules(rules: Rule[]) {
-    await this._globalState.update("hivemind.rules", rules);
+  private _warnNoCloud() {
+    vscode.window.showWarningMessage(
+      "HiveMind: add TURSO_DATABASE_URL and TURSO_AUTH_TOKEN to your VS Code settings (hivemind.*) to enable cloud sync.",
+    );
   }
 
-  private _sendState() {
+  private async _sendState() {
     if (!this._view) return;
     const blocks = this._memoryStore.listBlocks();
-    const groups = this._getGroups();
-    const rules = this._getRules();
+    const groups = this._cloud ? await this._cloud.listGroups() : [];
+    const rules = this._cloud ? await this._cloud.listRules() : [];
     void this._view.webview.postMessage({ type: "state", blocks, groups, rules });
   }
 
